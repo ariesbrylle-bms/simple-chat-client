@@ -1,0 +1,91 @@
+html
+	head
+		title Chat App
+		link(rel="stylesheet" href="/bower/semantic-ui/dist/semantic.min.css")
+	body
+		div.ui.container
+			h1 Chat App
+			div.ui.divider.fitted
+			div.ui.grid(style="height: 500px;")
+				div.thirteen.wide.column
+					div.ui.feed#chat_feed(style="overflow-y: auto")
+				div.three.wide.column
+					div.ui.list.divided#user_list(style="overflow-y: auto")
+			div.ui.form
+				div.fields
+					div.fourteen.wide.field
+						textarea(rows="2", style="resize: none")#message
+					div.two.wide.field
+						button.ui.button.blue#send_message(type="button") Send
+
+		script(src="/socket.io/socket.io.js")
+		script(src="/bower/jquery/dist/jquery.min.js")
+		script(src="/bower/semantic-ui/dist/semantic.js")
+		script.
+			var io = io.connect();
+
+			$(function() {
+				io.emit('users:connect', { username: prompt('Enter Username') }, function (data) {
+					for (var i in data.users) {
+						appendUser(data.users[i]);
+					}
+				});
+
+				io.on('new user', function (data) {
+					var new_user_feed_string = 	'<div class="event">' +
+																				'<div class="content>' +
+																					'<div class="summary">' +
+																						'<em>User ' + data.username + ' has connected</em>' +
+																					'</div>'
+																				'</div>'
+																			'</div>';
+
+					$('#chat_feed').append(new_user_feed_string);
+				});
+
+				io.on('user connected', function (data) {
+					appendUser(data);
+				});
+
+				io.on('user disconnected', function (data) {
+					var user_disconnected_string = 	'<div class="event">' +
+																						'<div class="content>' +
+																							'<div class="summary">' +
+																								'<em>User ' + data.username + ' has disconnected</em>' +
+																							'</div>'
+																						'</div>'
+																					'</div>';
+
+					$('#chat_feed').append(user_disconnected_string);
+					$('.user-' + data.socket_id).remove();
+				});
+
+				$('#send_message').on('click', function () {
+					var message = $('#message').val();
+					if (message === '') return;
+
+					io.emit('broadcast message', { message: message });
+					$('#message').val('');
+				});
+
+				io.on('message from server', function (data) {
+					var new_message_string =	'<div class="event">' +
+																			'<div class="content>' +
+																				'<div class="summary">' +
+																					'<span><b>' + data.user.username + ':&nbsp;</b></span>' +
+																					'<span>' + data.message + '</span>' +
+																				'</div>' +
+																			'</div>' +
+																		'</div>';
+					$('#chat_feed').append(new_message_string);
+				});
+
+				function appendUser(user) {
+					var new_user_list_string = '<div class="item user-' + user.socket_id + '">' +
+																				'<i class="icon user"></i>' +
+																				'<div class="content">' + user.username + '</div>' +
+																			'</div>';
+
+					$('#user_list').append(new_user_list_string);
+				}
+			});
