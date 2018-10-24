@@ -23,12 +23,14 @@ html
 		script(src="/bower/semantic/dist/semantic.js")
 		script.
 			var io = io.connect();
+			var userdata = [];
 
 			$(function() {
-				io.emit('users:connect', { username: prompt('Enter Username') }, function (data) {
+				io.emit('users:connect', { username: prompt('Enter Username') }, function (data, username) {
 					for (var i in data.users) {
 						appendUser(data.users[i]);
 					}
+					userdata = data.current_user_data;
 				});
 
 				io.on('new user', function (data) {
@@ -45,6 +47,7 @@ html
 
 				io.on('user connected', function (data) {
 					appendUser(data);
+					
 				});
 
 				io.on('user disconnected', function (data) {
@@ -69,7 +72,18 @@ html
 				});
 
 				io.on('message from server', function (data) {
-					var new_message_string =	'<div class="event">' +
+					if(data.user.socket_id == userdata.socket_id){
+							// current user
+							var new_message_string =	'<div class="event">' +
+																			'<div class="content>' +
+																				'<div class="summary right">' +
+																					'<span><b>' + data.user.username + ':&nbsp;</b></span>' +
+																					'<span>' + data.message + '</span>' +
+																				'</div>' +
+																			'</div>' +
+																		'</div>';
+					}else{
+							var new_message_string =	'<div class="event">' +
 																			'<div class="content>' +
 																				'<div class="summary">' +
 																					'<span><b>' + data.user.username + ':&nbsp;</b></span>' +
@@ -77,7 +91,10 @@ html
 																				'</div>' +
 																			'</div>' +
 																		'</div>';
+					}
+				
 					$('#chat_feed').append(new_message_string);
+					console.log(userdata);
 				});
 
 				function appendUser(user) {

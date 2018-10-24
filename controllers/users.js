@@ -7,7 +7,7 @@ exports.connect = function (req) {
 	req.session.save(function() {
 		var user = { username: req.data.username, socket_id: req.io.socket.id }
 		users.push(user);
-		req.io.respond({ users: users });
+		req.io.respond({ users: users, current_user_data : user });
 		req.io.room('chat').broadcast('user connected', user);
 		req.io.room('chat').broadcast('new user', { username: req.data.username, socket_id: req.io.socket.id });
 	});
