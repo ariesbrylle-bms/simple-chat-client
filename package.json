@@ -9,6 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bower": "^1.8.4",
+    "coffee-script": "^1.12.7",
+    "connect": "^3.6.6",
     "express": "^4.13.1",
     "express-path": "^0.3.8",
     "express.io": "^1.1.13",
